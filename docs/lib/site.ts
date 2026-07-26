@@ -1,4 +1,4 @@
-export const SITE_URL = 'https://memgrep.getuigen.dev';
+export const SITE_URL = 'https://memgrep.gitwork.dev';
 export const SITE_NAME = 'memgrep';
 export const GITHUB_URL = 'https://github.com/darula-hpp/memgrep';
 

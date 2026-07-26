@@ -9,7 +9,18 @@
           "value": "memgrep-docs.vercel.app"
         }
       ],
-      "destination": "https://memgrep.getuigen.dev/:path*",
+      "destination": "https://memgrep.gitwork.dev/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "memgrep.getuigen.dev"
+        }
+      ],
+      "destination": "https://memgrep.gitwork.dev/:path*",
       "permanent": true
     }
   ]

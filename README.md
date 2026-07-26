@@ -2,7 +2,7 @@
 
 Local agent memory, a coding loop, Cursor from your phone, and playbooks you can schedule.
 
-**Docs:** [https://memgrep.getuigen.dev](https://memgrep.getuigen.dev)
+**Docs:** [https://memgrep.gitwork.dev](https://memgrep.gitwork.dev)
 
 memgrep is a local control plane for Cursor. It started as searchable agent memory. The scope is larger now:
 
@@ -148,7 +148,7 @@ memgrep index <dir>
 memgrep search "query"
 ```
 
-Full walkthroughs: [docs](https://memgrep.getuigen.dev).
+Full walkthroughs: [docs](https://memgrep.gitwork.dev).
 
 ## Agent memory
 
@@ -369,7 +369,7 @@ npm run build
 npm test
 ```
 
-Docs site: `cd docs && npm install && npm run dev` (port 4401). Live: [memgrep.getuigen.dev](https://memgrep.getuigen.dev).
+Docs site: `cd docs && npm install && npm run dev` (port 4401). Live: [memgrep.gitwork.dev](https://memgrep.gitwork.dev).
 
 ## License
 

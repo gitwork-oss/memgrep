@@ -36,4 +36,4 @@ npm install
 npm run dev
 ```
 
-Production docs are published at [memgrep.getuigen.dev](https://memgrep.getuigen.dev).
+Production docs are published at [memgrep.gitwork.dev](https://memgrep.gitwork.dev).

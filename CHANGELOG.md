@@ -87,7 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Docs site** - Next.js docs under `docs/` at [https://memgrep.getuigen.dev](https://memgrep.getuigen.dev) (getting started, concepts, guides, CLI, MCP).
+- **Docs site** - Next.js docs under `docs/` at [https://memgrep.gitwork.dev](https://memgrep.gitwork.dev) (getting started, concepts, guides, CLI, MCP).
 - **Expanded product README** - frames memory, coding loop, Telegram, jobs, and optional MCP suites as the full surface area.
 - **Per-project loop profiles** - copy-from-base configs under `~/.memgrep/loops/<name>/` (template `~/.memgrep/loop.base/`). CLI: `loop init <name>`, `loop use <name>`, `--profile` on run/upserts/status. MCP `loop_run` / upserts accept optional `profile`. Active profile in `~/.memgrep/loop.active` (or `MEMGREP_LOOP_PROFILE`). Legacy `~/.memgrep/loop.json` migrates once into `loops/default`.
 - **Loop MCP tools** - optional agnostic coding loop (`loop_status`, `loop_run`, `loop_run_status`, plus `loop_upsert_*` / `loop_remove_*` for defaults). Free-text `task` is required; optional `jiraKey` only enriches context. Defaults are generic **inputs**, **exit conditions**, and **exit actions** (path/url/text/builtin) with agent-facing manifests under `~/.memgrep/loops/<profile>/`. After coding PASS, builtins run first (`github_pr`), then a Cursor turn for remaining actions. Configure with `memgrep loop init <name>` / `loop setup`; requires Cursor; Jira optional; omitted when unconfigured.
