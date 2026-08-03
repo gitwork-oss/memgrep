@@ -14,7 +14,7 @@ export const EDITOR_HTML = `<!doctype html>
         <header class="brand">
           <p class="brand-mark">memgrep docs</p>
           <h1>Edit filled Word fields</h1>
-          <p class="lede">Changes re-fill from the original template and overwrite the doc in <code>.memgrep/docs</code>. Iterable rows and nested block loops (cases → steps) support add/remove.</p>
+          <p class="lede">Changes re-fill from the original template and overwrite the doc in <code>.memgrep/docs</code>. Iterable rows and nested block loops (cases → steps) support add/remove. Download DOCX anytime; PDF needs LibreOffice headless.</p>
         </header>
         <section class="panel">
           <label class="field">
@@ -27,6 +27,8 @@ export const EDITOR_HTML = `<!doctype html>
           <p id="status" class="status"></p>
           <div class="actions">
             <button type="button" id="reloadBtn" class="ghost">Reload</button>
+            <button type="button" id="downloadDocxBtn" class="ghost">Download DOCX</button>
+            <button type="button" id="downloadPdfBtn" class="ghost">Download PDF</button>
             <button type="button" id="saveBtn">Save</button>
           </div>
         </section>
@@ -201,6 +203,8 @@ const errorEl = document.getElementById('error');
 const statusEl = document.getElementById('status');
 const saveBtn = document.getElementById('saveBtn');
 const reloadBtn = document.getElementById('reloadBtn');
+const downloadDocxBtn = document.getElementById('downloadDocxBtn');
+const downloadPdfBtn = document.getElementById('downloadPdfBtn');
 
 const params = new URLSearchParams(location.search);
 let currentName = params.get('name') || '';
@@ -623,11 +627,61 @@ async function saveDoc() {
   }
 }
 
+function downloadDocx() {
+  if (!currentName) {
+    showError('Select a document first');
+    return;
+  }
+  showError('');
+  window.location.href = '/api/doc/' + encodeURIComponent(currentName) + '/docx';
+}
+
+async function downloadPdf() {
+  if (!currentName) {
+    showError('Select a document first');
+    return;
+  }
+  showError('');
+  statusEl.textContent = 'Converting to PDF…';
+  downloadPdfBtn.disabled = true;
+  try {
+    const res = await fetch('/api/doc/' + encodeURIComponent(currentName) + '/pdf');
+    const type = res.headers.get('content-type') || '';
+    if (!res.ok) {
+      let message = 'PDF download failed';
+      if (type.includes('application/json')) {
+        const data = await res.json();
+        message = data.error || message;
+      } else {
+        message = (await res.text()) || message;
+      }
+      throw new Error(message);
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = currentName + '.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    statusEl.textContent = 'Downloaded ' + currentName + '.pdf';
+  } catch (err) {
+    showError(err.message || String(err));
+    statusEl.textContent = '';
+  } finally {
+    downloadPdfBtn.disabled = false;
+  }
+}
+
 select.addEventListener('change', () => {
   currentName = select.value;
   loadDoc(currentName).catch((e) => showError(e.message));
 });
 reloadBtn.addEventListener('click', () => loadDoc(currentName).catch((e) => showError(e.message)));
+downloadDocxBtn.addEventListener('click', () => downloadDocx());
+downloadPdfBtn.addEventListener('click', () => downloadPdf());
 saveBtn.addEventListener('click', () => saveDoc());
 
 (async () => {

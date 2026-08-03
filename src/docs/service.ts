@@ -8,6 +8,7 @@ import {
 import path from 'node:path';
 import { writeFileAtomic } from '../fs/atomic-write.js';
 import { extractFields, fillDocument, type IterableSchema } from './core/index.js';
+import { docxToPdf, type DocxToPdfDeps } from './pdf.js';
 import { editorLockPath, projectDocsDir, projectTemplatesDir } from './paths.js';
 import { ensureDocsDirs } from './setup.js';
 
@@ -187,6 +188,42 @@ export class DocsService {
       context,
       name: slug,
     });
+  }
+
+  /** Absolute path to a filled `.docx`, or throw if missing. */
+  resolveDocxPath(name: string): string {
+    const slug = sanitizeSlug(name);
+    const docxPath = this.docxPath(slug);
+    if (!existsSync(docxPath)) {
+      throw new Error(`Docx missing for "${slug}"`);
+    }
+    return docxPath;
+  }
+
+  readDocx(name: string): { slug: string; docxPath: string; buffer: Buffer; filename: string } {
+    const slug = sanitizeSlug(name);
+    const docxPath = this.resolveDocxPath(slug);
+    return {
+      slug,
+      docxPath,
+      buffer: readFileSync(docxPath),
+      filename: `${slug}.docx`,
+    };
+  }
+
+  async exportPdf(
+    name: string,
+    deps?: DocxToPdfDeps,
+  ): Promise<{ slug: string; buffer: Buffer; filename: string; docxPath: string }> {
+    const slug = sanitizeSlug(name);
+    const docxPath = this.resolveDocxPath(slug);
+    const buffer = await docxToPdf(docxPath, deps);
+    return {
+      slug,
+      buffer,
+      filename: `${slug}.pdf`,
+      docxPath,
+    };
   }
 
   readEditorLock(): EditorLock | null {

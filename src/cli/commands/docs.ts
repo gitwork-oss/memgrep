@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
 import type { Command } from 'commander';
 import { fail } from '../lib/errors.js';
 
@@ -98,6 +99,26 @@ export function registerDocsCommand(program: Command): void {
           console.log('Press Ctrl+C to stop.');
           await new Promise(() => undefined);
         }
+      } catch (error) {
+        fail(error instanceof Error ? error.message : String(error));
+      }
+    });
+
+  docs
+    .command('pdf')
+    .description('Export a filled doc to PDF via LibreOffice headless')
+    .argument('<slug>', 'Filled doc name under .memgrep/docs')
+    .option('--out <path>', 'Output PDF path (default: beside the .docx)')
+    .action(async (slug: string, opts: { out?: string }) => {
+      try {
+        const { DocsService } = await import('../../docs/service.js');
+        const service = new DocsService(process.cwd());
+        const result = await service.exportPdf(slug);
+        const outPath = opts.out
+          ? path.resolve(opts.out)
+          : path.join(path.dirname(result.docxPath), result.filename);
+        writeFileSync(outPath, result.buffer);
+        console.log(`Wrote ${outPath}`);
       } catch (error) {
         fail(error instanceof Error ? error.message : String(error));
       }

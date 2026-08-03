@@ -14,6 +14,7 @@ memgrep docs list
 memgrep docs fill <template.docx> --context '{"title":"Retro"}' [--name slug]
 memgrep docs fill <template.docx> --context-file ./fields.json --name sprint-retro
 memgrep docs edit [slug] [--port 8791]
+memgrep docs pdf <slug> [--out path.pdf]
 ```
 
 Alias: `memgrep doc …`
@@ -27,11 +28,16 @@ Alias: `memgrep doc …`
     docs/          # filled .docx + .context.json sidecars
 ```
 
-- **setup** — create `templates` and `docs` dirs (idempotent)
-- **status** — show paths and counts
-- **list** — list templates in `.memgrep/templates`
-- **fill** — apply JSON context; writes `.memgrep/docs/<slug>.docx` and `.context.json`
-- **edit** — start `127.0.0.1` web UI (default port `8791`); save re-fills from the original template
+- **setup** - create `templates` and `docs` dirs (idempotent)
+- **status** - show paths and counts
+- **list** - list templates in `.memgrep/templates`
+- **fill** - apply JSON context; writes `.memgrep/docs/<slug>.docx` and `.context.json`
+- **edit** - start `127.0.0.1` web UI (default port `8791`); save re-fills from the original template; **Download DOCX** / **Download PDF** in the editor
+- **pdf** - export a filled doc to PDF via LibreOffice headless (`soffice --headless --convert-to pdf`)
+
+### PDF export
+
+PDF conversion requires LibreOffice on the machine (macOS: `brew install --cask libreoffice`). The editor and `docs pdf` both use headless convert against the filled `.docx` already on disk. Override the binary with `MEMGREP_SOFFICE` if needed.
 
 ### Placeholders
 

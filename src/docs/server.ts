@@ -1,6 +1,7 @@
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import express from 'express';
+import { isLibreOfficeNotFound } from './pdf.js';
 import { DocsService, type EditorLock } from './service.js';
 import { EDITOR_CSS, EDITOR_HTML, EDITOR_JS } from './web/assets.js';
 
@@ -65,6 +66,40 @@ export function createDocsEditorApp(service: DocsService): express.Express {
       res.json(saved);
     } catch (error) {
       res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.get('/api/doc/:name/docx', (req, res) => {
+    try {
+      const file = service.readDocx(req.params.name);
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      );
+      res.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`);
+      res.send(file.buffer);
+    } catch (error) {
+      res.status(404).json({ error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.get('/api/doc/:name/pdf', async (req, res) => {
+    try {
+      const file = await service.exportPdf(req.params.name);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`);
+      res.send(file.buffer);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (isLibreOfficeNotFound(error)) {
+        res.status(503).json({ error: message });
+        return;
+      }
+      if (/missing|not found|No context/i.test(message)) {
+        res.status(404).json({ error: message });
+        return;
+      }
+      res.status(500).json({ error: message });
     }
   });
 

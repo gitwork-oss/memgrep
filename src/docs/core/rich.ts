@@ -291,7 +291,7 @@ function blockTokensToOoxml(tokens: Token[], indentLevel = 0): string {
 
 /**
  * Convert Markdown to one or more OOXML paragraphs.
- * Supports: headings (#–###), **bold**, *italic*, lists (nested = indent),
+ * Supports: headings (#-###), **bold**, *italic*, lists (nested = indent),
  * blockquotes (indent), paragraphs.
  */
 export function markdownToOoxmlParagraphs(markdown: string): string {

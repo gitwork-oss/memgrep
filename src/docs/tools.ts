@@ -3,7 +3,7 @@ import { startDocsEditor } from './server.js';
 import { DocsService } from './service.js';
 
 /**
- * MCP/CLI-facing docs tools — project-local Word template fill + editor.
+ * MCP/CLI-facing docs tools: project-local Word template fill + editor.
  */
 export class DocsTools {
   constructor(private readonly service: DocsService) {}
@@ -118,6 +118,7 @@ export class DocsTools {
           handle.reused ? 'Docs editor already running.' : 'Docs editor started.',
           `  url: ${handle.url}`,
           `  bind: ${handle.host}:${handle.port}`,
+          '  downloads: Download DOCX / Download PDF (PDF needs LibreOffice headless)',
         ].join('\n'),
       };
     } catch (error) {

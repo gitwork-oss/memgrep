@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.7] - 2026-08-03
+
+### Added
+
+- **Docs PDF / DOCX download** - localhost editor **Download DOCX** and **Download PDF** (LibreOffice `soffice --headless`); CLI `memgrep docs pdf <slug> [--out path]`.
+
 ## [1.6.6] - 2026-07-23
 
 ### Changed
