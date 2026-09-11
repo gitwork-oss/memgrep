@@ -12,6 +12,7 @@ import {
   appendArtifactsToText,
   clearRegisteredArtifacts,
   collectRunArtifacts,
+  inferArtifactsFromText,
   readWorkspaceArtifact,
   registerArtifactPath,
   type RunArtifactMeta,
@@ -172,7 +173,10 @@ export class CursorAgentService {
     runStartedAt: number,
     recovered: boolean,
   ): AgentTurnResult & { cwd: string; artifacts: RunArtifactMeta[] } {
-    const artifacts = collectRunArtifacts(cwd, runStartedAt);
+    let artifacts = collectRunArtifacts(cwd, runStartedAt);
+    if (!artifacts.length) {
+      artifacts = inferArtifactsFromText(turn.text, cwd);
+    }
     clearRegisteredArtifacts(cwd);
     const suffix = recovered ? ' — fresh session after recovery)' : ')';
     const meta =

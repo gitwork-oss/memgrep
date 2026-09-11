@@ -147,6 +147,26 @@ function scanDirForArtifacts(
   walk(dirName);
 }
 
+const OUTPUT_PDF_RE = /\boutput\/[a-zA-Z0-9._-]+\.pdf\b/g;
+
+/** Paths the agent mentioned in prose (fallback when register_artifact was skipped). */
+export function inferArtifactsFromText(text: string, cwd: string): RunArtifactMeta[] {
+  const matches = text.match(OUTPUT_PDF_RE) ?? [];
+  const found = new Map<string, RunArtifactMeta>();
+  for (const rel of [...new Set(matches)]) {
+    try {
+      const abs = path.join(cwd, rel);
+      if (!existsSync(abs)) continue;
+      const stat = statSync(abs);
+      if (!stat.isFile() || stat.size > MAX_ARTIFACT_BYTES) continue;
+      found.set(rel, metaForFile(cwd, rel, stat.size));
+    } catch {
+      // skip invalid paths
+    }
+  }
+  return [...found.values()].slice(0, MAX_ARTIFACTS_PER_RUN);
+}
+
 /** Collect registered + newly written artifacts for a cursor_run turn. */
 export function collectRunArtifacts(
   cwd: string,

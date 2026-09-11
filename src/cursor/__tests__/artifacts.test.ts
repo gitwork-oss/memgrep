@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   appendArtifactsToText,
   collectRunArtifacts,
+  inferArtifactsFromText,
   normalizeArtifactPath,
   parseArtifactsFromText,
   readWorkspaceArtifact,
@@ -62,6 +63,14 @@ describe('artifacts', () => {
     const parsed = parseArtifactsFromText(wrapped);
     expect(parsed.text).toBe('hello');
     expect(parsed.artifacts).toEqual(artifacts);
+  });
+
+  it('infers output pdf paths mentioned in agent text', () => {
+    const cwd = tempCwd();
+    writeFileSync(path.join(cwd, 'output', 'cv.pdf'), 'pdf-bytes');
+    const artifacts = inferArtifactsFromText('Saved output/cv.pdf for delivery.', cwd);
+    expect(artifacts).toHaveLength(1);
+    expect(artifacts[0]?.path).toBe('output/cv.pdf');
   });
 
   it('reads workspace pdf bytes', () => {
