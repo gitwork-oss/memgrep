@@ -147,22 +147,33 @@ function scanDirForArtifacts(
   walk(dirName);
 }
 
-const OUTPUT_PDF_RE = /\boutput\/[a-zA-Z0-9._-]+\.pdf\b/g;
+const PDF_NAME_RE =
+  /\b(?:output\/[a-zA-Z0-9._-]+\.pdf|[a-zA-Z0-9][a-zA-Z0-9._-]*\.pdf)\b/gi;
+
+function tryOutputPdf(cwd: string, rel: string, found: Map<string, RunArtifactMeta>): void {
+  const normalized = rel.replace(/\\/g, '/').trim();
+  if (!normalized.toLowerCase().endsWith('.pdf')) return;
+  const relative = normalized.includes('/') ? normalized : `output/${normalized}`;
+  if (!relative.startsWith('output/')) return;
+  try {
+    const abs = path.join(cwd, relative);
+    if (!existsSync(abs)) return;
+    const stat = statSync(abs);
+    if (!stat.isFile() || stat.size > MAX_ARTIFACT_BYTES) return;
+    found.set(relative, metaForFile(cwd, relative, stat.size));
+  } catch {
+    // skip invalid paths
+  }
+}
 
 /** Paths the agent mentioned in prose (fallback when register_artifact was skipped). */
 export function inferArtifactsFromText(text: string, cwd: string): RunArtifactMeta[] {
-  const matches = text.match(OUTPUT_PDF_RE) ?? [];
   const found = new Map<string, RunArtifactMeta>();
-  for (const rel of [...new Set(matches)]) {
-    try {
-      const abs = path.join(cwd, rel);
-      if (!existsSync(abs)) continue;
-      const stat = statSync(abs);
-      if (!stat.isFile() || stat.size > MAX_ARTIFACT_BYTES) continue;
-      found.set(rel, metaForFile(cwd, rel, stat.size));
-    } catch {
-      // skip invalid paths
-    }
+  for (const raw of text.match(PDF_NAME_RE) ?? []) {
+    tryOutputPdf(cwd, raw, found);
+  }
+  for (const m of text.matchAll(/[`'"]([^`'"]+\.pdf)[`'"]/gi)) {
+    tryOutputPdf(cwd, m[1] ?? '', found);
   }
   return [...found.values()].slice(0, MAX_ARTIFACTS_PER_RUN);
 }

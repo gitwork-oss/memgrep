@@ -73,6 +73,14 @@ describe('artifacts', () => {
     expect(artifacts[0]?.path).toBe('output/cv.pdf');
   });
 
+  it('infers bare pdf filenames under output/', () => {
+    const cwd = tempCwd();
+    writeFileSync(path.join(cwd, 'output', 'cv-tailored.pdf'), 'pdf-bytes');
+    const artifacts = inferArtifactsFromText('File: `cv-tailored.pdf`', cwd);
+    expect(artifacts).toHaveLength(1);
+    expect(artifacts[0]?.path).toBe('output/cv-tailored.pdf');
+  });
+
   it('reads workspace pdf bytes', () => {
     const cwd = tempCwd();
     writeFileSync(path.join(cwd, 'output', 'x.pdf'), 'pdf-bytes');
