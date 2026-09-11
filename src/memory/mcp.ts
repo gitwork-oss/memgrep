@@ -328,6 +328,39 @@ export async function startHttpMcpServer(options: ServeOptions = {}): Promise<Ht
     res.json(edgeHub.getPresence());
   });
 
+  app.get('/workspace/file', (req, res) => {
+    if (!edgeAuthOk(req)) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+    if (!cursor) {
+      res.status(503).json({ error: 'cursor_not_configured' });
+      return;
+    }
+    const filePath =
+      typeof req.query.path === 'string' ? req.query.path.trim() : '';
+    const cwdRef =
+      typeof req.query.cwd === 'string' ? req.query.cwd.trim() : undefined;
+    if (!filePath) {
+      res.status(400).json({ error: 'path is required' });
+      return;
+    }
+    try {
+      const buffer = cursor.agentService().readWorkspaceFile({
+        path: filePath,
+        ...(cwdRef ? { cwd: cwdRef } : {}),
+      });
+      const name = filePath.split('/').pop() || 'file.pdf';
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${name}"`);
+      res.send(buffer);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const status = message.includes('not found') ? 404 : 400;
+      res.status(status).json({ error: message });
+    }
+  });
+
   app.post('/edge/invoke', express.json({ limit: '4mb' }), async (req, res) => {
     if (!edgeAuthOk(req)) {
       res.status(401).json({ error: 'Unauthorized' });

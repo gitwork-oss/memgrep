@@ -1,3 +1,4 @@
+import type { RunArtifactMeta } from '../cursor/artifacts.js';
 import type { MemoryStore } from './store.js';
 import {
   extractCursorAgentIdFromSource,
@@ -14,6 +15,7 @@ export const TELEGRAM_MAX_MESSAGE_CHARS = 3900;
 export type ToolResult = {
   text: string;
   isError?: boolean;
+  artifacts?: RunArtifactMeta[];
 };
 
 export type RecallInput = {

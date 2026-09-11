@@ -24,10 +24,31 @@ export class CursorTools {
   }): Promise<ToolResult> {
     try {
       const result = await this.service.run(input);
-      return { text: result.text, isError: result.ok ? undefined : true };
+      return {
+        text: result.text,
+        isError: result.ok ? undefined : true,
+        artifacts: result.ok ? result.artifacts : undefined,
+      };
     } catch (error) {
       return { text: error instanceof Error ? error.message : String(error), isError: true };
     }
+  }
+
+  registerArtifact(input: { path: string; cwd?: string }): ToolResult {
+    try {
+      const meta = this.service.registerArtifact(input);
+      return {
+        text: `Registered artifact ${meta.path} (${meta.sizeBytes} bytes).`,
+        artifacts: [meta],
+      };
+    } catch (error) {
+      return { text: error instanceof Error ? error.message : String(error), isError: true };
+    }
+  }
+
+  /** Exposed for HTTP /workspace/file (hub proxy). */
+  agentService(): CursorAgentService {
+    return this.service;
   }
 
   async status(): Promise<ToolResult> {

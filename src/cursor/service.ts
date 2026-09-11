@@ -8,6 +8,14 @@ import type { ResolvedCursorConfig } from './config.js';
 import { isAgentRunMode, parseAgentRunMode, type AgentRunMode } from './mode.js';
 import type { CodingAgentProvider, ProviderContext } from './provider.js';
 import { createCursorProvider } from './providers/cursor.js';
+import {
+  appendArtifactsToText,
+  clearRegisteredArtifacts,
+  collectRunArtifacts,
+  readWorkspaceArtifact,
+  registerArtifactPath,
+  type RunArtifactMeta,
+} from './artifacts.js';
 import { runAgentTurn, type AgentTurnResult } from './runner.js';
 
 export type CursorRunInput = {
@@ -83,11 +91,14 @@ export class CursorAgentService {
     );
   }
 
-  async run(input: CursorRunInput): Promise<AgentTurnResult & { cwd: string }> {
+  async run(
+    input: CursorRunInput,
+  ): Promise<AgentTurnResult & { cwd: string; artifacts: RunArtifactMeta[] }> {
     const prompt = input.prompt?.trim();
     if (!prompt) throw new Error('prompt is required.');
 
     const cwd = this.resolveCwd(input.cwd);
+    const runStartedAt = Date.now();
     const model = input.model?.trim() || this.config.model;
     let mode: AgentRunMode = this.config.agentMode;
     if (input.mode?.trim()) {
@@ -130,34 +141,45 @@ export class CursorAgentService {
           logPrefix: 'memgrep cursor-mcp',
         });
         if (turn.ok) {
-          return {
-            ...turn,
-            text:
-              turn.text +
-              `\n\n(agentId=${turn.agentId} cwd=${cwd}` +
-              (turn.modelId ? ` model=${turn.modelId}` : '') +
-              ' — fresh session after recovery)',
-            cwd,
-          };
+          return this.finishRun(turn, cwd, runStartedAt, true);
         }
       }
 
       if (turn.ok) {
-        return {
-          ...turn,
-          text:
-            turn.text +
-            `\n\n(agentId=${turn.agentId} cwd=${cwd}` +
-            (turn.modelId ? ` model=${turn.modelId}` : '') +
-            ')',
-          cwd,
-        };
+        return this.finishRun(turn, cwd, runStartedAt, false);
       }
 
-      return { ...turn, cwd };
+      return { ...turn, cwd, artifacts: [] };
     } finally {
       // Keep agent alive on disk for resume via agentId; dispose SDK handle.
       await session.dispose().catch(() => undefined);
     }
+  }
+
+  registerArtifact(input: { path: string; cwd?: string }): RunArtifactMeta {
+    const cwd = this.resolveCwd(input.cwd);
+    return registerArtifactPath(cwd, input.path);
+  }
+
+  readWorkspaceFile(input: { path: string; cwd?: string }): Buffer {
+    const cwd = this.resolveCwd(input.cwd);
+    return readWorkspaceArtifact(cwd, input.path);
+  }
+
+  private finishRun(
+    turn: Extract<AgentTurnResult, { ok: true }>,
+    cwd: string,
+    runStartedAt: number,
+    recovered: boolean,
+  ): AgentTurnResult & { cwd: string; artifacts: RunArtifactMeta[] } {
+    const artifacts = collectRunArtifacts(cwd, runStartedAt);
+    clearRegisteredArtifacts(cwd);
+    const suffix = recovered ? ' — fresh session after recovery)' : ')';
+    const meta =
+      `\n\n(agentId=${turn.agentId} cwd=${cwd}` +
+      (turn.modelId ? ` model=${turn.modelId}` : '') +
+      suffix;
+    const text = appendArtifactsToText(turn.text + meta, artifacts);
+    return { ...turn, text, cwd, artifacts };
   }
 }

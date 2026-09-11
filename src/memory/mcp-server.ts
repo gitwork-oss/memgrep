@@ -778,6 +778,25 @@ function registerCursorTools(server: McpServer, cursor: CursorTools): void {
     },
     async (input) => toMcpContent(await cursor.run(input)),
   );
+
+  server.registerTool(
+    'register_artifact',
+    {
+      description:
+        'Mark a workspace file for delivery after cursor_run (e.g. output/cv.pdf). ' +
+        'Path must be under output/ or data/. Gitwork delivers PDFs to Telegram automatically.',
+      inputSchema: {
+        path: z
+          .string()
+          .describe('Relative path under the workspace cwd, e.g. output/my-cv.pdf'),
+        cwd: z
+          .string()
+          .optional()
+          .describe('Workspace name, index, or allowlisted path (default: configured cwd)'),
+      },
+    },
+    async (input) => toMcpContent(await cursor.registerArtifact(input)),
+  );
 }
 
 const loopArtifactSchema = z.object({
