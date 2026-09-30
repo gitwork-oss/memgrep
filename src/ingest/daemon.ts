@@ -51,7 +51,7 @@ export class IngestDaemon {
     const sleep = this.options.sleep ?? defaultSleep;
     const sourceLabel = settings.sources?.length
       ? settings.sources.join(',')
-      : 'cursor,claude,kiro';
+      : 'cursor,claude,kiro,copilot';
 
     console.error(
       `memgrep ingest daemon: interval=${formatInterval(settings.intervalMs)} sources=${sourceLabel} home=${settings.home}`,

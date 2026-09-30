@@ -39,7 +39,7 @@ export interface ChatInput {
   content: string;
   /** Origin file path; used to detect re-ingestion of a chat that has grown. */
   source?: string;
-  /** Which agent tool the chat came from, e.g. "cursor", "claude", "kiro", "note". */
+  /** Which agent tool the chat came from, e.g. "cursor", "claude", "kiro", "copilot", "note". */
   tool?: string;
   /** Cursor SDK agent id when known (for Telegram /open resume). */
   cursorAgentId?: string;

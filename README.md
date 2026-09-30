@@ -157,7 +157,7 @@ Full walkthroughs: [docs](https://memgrep.gitwork.dev).
 
 ```bash
 memgrep scan [--source kiro] [--new] [--last <n>]
-memgrep ingest [--source cursor,claude,kiro]
+memgrep ingest [--source cursor,claude,kiro,copilot]
 memgrep ingest --pick 2,5
 memgrep ingest --last [n]
 memgrep ingest <file...>

@@ -25,7 +25,7 @@ Default interval is **1 hour**. Config is stored at `~/.memgrep/ingest.json`. Th
 ## Commands
 
 ```bash
-memgrep ingest daemon [--interval 1h] [--source cursor,claude,kiro]
+memgrep ingest daemon [--interval 1h] [--source cursor,claude,kiro,copilot]
 memgrep ingest install [--interval 1h] [--source ...]
 memgrep ingest uninstall
 memgrep ingest service

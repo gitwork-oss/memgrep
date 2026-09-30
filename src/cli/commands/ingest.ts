@@ -168,7 +168,7 @@ export function registerIngestCommand(program: Command): void {
     .command('daemon')
     .description('Run background ingest on an interval (reads ~/.memgrep/ingest.json)')
     .option('--interval <duration>', 'override interval (e.g. 15m, 1h, 3600)')
-    .option('--source <list>', 'comma-separated sources: cursor,claude,kiro')
+    .option('--source <list>', 'comma-separated sources: cursor,claude,kiro,copilot')
     .action(async (opts: { interval?: string; source?: string }) => {
       try {
         const { runIngestDaemon } = await import('../../ingest/daemon.js');
@@ -185,7 +185,7 @@ export function registerIngestCommand(program: Command): void {
     .command('install')
     .description('Install a macOS LaunchAgent for the ingest daemon')
     .option('--interval <duration>', 'interval to persist (default: 1h, or keep existing config)')
-    .option('--source <list>', 'comma-separated sources: cursor,claude,kiro')
+    .option('--source <list>', 'comma-separated sources: cursor,claude,kiro,copilot')
     .action(async (opts: { interval?: string; source?: string }) => {
       if (process.platform !== 'darwin') fail('LaunchAgent install is only supported on macOS.');
       try {
@@ -232,7 +232,7 @@ export function registerIngestCommand(program: Command): void {
 
   ingest
     .argument('[files...]', 'specific chat files to ingest (format auto-detected)')
-    .option('--source <list>', 'comma-separated sources: cursor,claude,kiro')
+    .option('--source <list>', 'comma-separated sources: cursor,claude,kiro,copilot')
     .option('--pick [indices]', 'ingest by number from last scan, or interactive menu if no value')
     .option('--last [n]', 'ingest only the n most recent chats (default: 1)')
     .option('--title <title>', 'title when ingesting specific files')

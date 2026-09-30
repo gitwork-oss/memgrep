@@ -10,7 +10,7 @@ export function registerScanCommand(program: Command): void {
   program
     .command('scan')
     .description('List available chats without ingesting')
-    .option('--source <list>', 'comma-separated sources: cursor,claude,kiro')
+    .option('--source <list>', 'comma-separated sources: cursor,claude,kiro,copilot')
     .option('--new', 'show only chats not yet ingested (or changed)')
     .option('--last <n>', 'how many chats to show', '20')
     .action(async (opts: { source?: string; new?: boolean; last: string }) => {

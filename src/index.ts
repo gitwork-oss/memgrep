@@ -11,9 +11,11 @@ export {
   cursorSource,
   claudeSource,
   kiroSource,
+  copilotSource,
   parseCursorTranscript,
   parseClaudeTranscript,
   parseKiroSession,
+  parseCopilotEvents,
   ALL_SOURCES,
 } from './memory/ingest.js';
 export type { TranscriptSource, SourceName, IngestResult } from './memory/ingest.js';

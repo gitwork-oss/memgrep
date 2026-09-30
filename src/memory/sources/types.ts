@@ -2,7 +2,7 @@ import type { ChatInput } from '../store.js';
 
 /** A tool whose local chat history can be ingested into memory. */
 export interface TranscriptSource {
-  /** Stable identifier, e.g. "cursor", "claude", "kiro". */
+  /** Stable identifier, e.g. "cursor", "claude", "kiro", "copilot". */
   name: string;
   /** Yield all chats found on disk. Must yield nothing (not throw) when the tool is absent. */
   scan(): AsyncGenerator<ChatInput>;
