@@ -75,6 +75,30 @@ describe('parseClaudeTranscript', () => {
     expect(parsed!.content).toContain('Assistant: Deployed via the GitHub Action.');
     expect(parsed!.content).not.toContain('sidechain noise');
   });
+
+  it('strips hyphenated <system-reminder> blocks and titles from the real query', () => {
+    const lines = [
+      JSON.stringify({
+        type: 'user',
+        message: {
+          role: 'user',
+          content: [
+            { type: 'text', text: '<system-reminder>\nThe user email is x@y.z\n</system-reminder>' },
+            { type: 'text', text: 'why is checkout slow?' },
+          ],
+        },
+      }),
+      JSON.stringify({
+        type: 'assistant',
+        message: { role: 'assistant', content: [{ type: 'text', text: 'N+1 query in the cart loader.' }] },
+      }),
+    ].join('\n');
+
+    const parsed = parseClaudeTranscript(lines);
+    expect(parsed!.title).toBe('why is checkout slow?');
+    expect(parsed!.content).not.toContain('system-reminder');
+    expect(parsed!.content).not.toContain('x@y.z');
+  });
 });
 
 describe('ingestFile format detection', () => {

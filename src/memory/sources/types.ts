@@ -33,7 +33,7 @@ export function cleanUserText(text: string): string {
   if (queries.length > 0) return queries.join('\n');
 
   return text
-    .replace(/<(external_links|open_and_recently_viewed_files|system_reminder|system_notification|attached_files|user_info|agent_transcripts|agent_skills|timestamp|command-name|command-message|command-args|local-command-stdout)>[\s\S]*?<\/\1>/g, '')
+    .replace(/<(external_links|open_and_recently_viewed_files|system_reminder|system-reminder|system_notification|attached_files|user_info|agent_transcripts|agent_skills|timestamp|command-name|command-message|command-args|local-command-stdout)>[\s\S]*?<\/\1>/g, '')
     .trim();
 }
 
