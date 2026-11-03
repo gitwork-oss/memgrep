@@ -7,7 +7,7 @@ description: What memgrep is and when to use it.
 
 memgrep is local agent memory, Cursor from your phone, and scheduled playbooks.
 
-It started as searchable memory for coding agents. It still is that: every chat across Cursor, Claude Code, and Kiro, fully local, recallable via CLI or MCP. It also grew into a thin remote coding path: an allowlisted Telegram bot that drives a real Cursor agent in a real project folder, with memgrep memory attached mid-task. And jobs: attach a remembered playbook to a cron schedule so Cursor runs it on a timer.
+It started as searchable memory for coding agents. It still is that: every chat across Cursor, Claude Code, Kiro, and GitHub Copilot, fully local, recallable via CLI or MCP. It also grew into a thin remote coding path: an allowlisted Telegram bot that drives a real Cursor agent in a real project folder, with memgrep memory attached mid-task. And jobs: attach a remembered playbook to a cron schedule so Cursor runs it on a timer.
 
 ## The point
 

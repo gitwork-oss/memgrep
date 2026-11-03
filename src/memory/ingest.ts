@@ -1,16 +1,18 @@
+import { basename } from 'node:path';
 import type { ChatInput, MemoryStore } from './store.js';
 import { claudeSource, parseClaudeTranscript } from './sources/claude.js';
+import { copilotSource, parseCopilotEvents } from './sources/copilot.js';
 import { cursorSource, parseCursorTranscript } from './sources/cursor.js';
 import { kiroSource, parseKiroSession } from './sources/kiro.js';
 import type { TranscriptSource } from './sources/types.js';
 
-export { claudeSource, cursorSource, kiroSource };
+export { claudeSource, copilotSource, cursorSource, kiroSource };
 export type { TranscriptSource };
 /** @deprecated Use parseCursorTranscript. */
 export const parseTranscript = parseCursorTranscript;
-export { parseCursorTranscript, parseClaudeTranscript, parseKiroSession };
+export { parseCursorTranscript, parseClaudeTranscript, parseKiroSession, parseCopilotEvents };
 
-export const ALL_SOURCES = ['cursor', 'claude', 'kiro'] as const;
+export const ALL_SOURCES = ['cursor', 'claude', 'kiro', 'copilot'] as const;
 export type SourceName = (typeof ALL_SOURCES)[number];
 
 export interface IngestResult {
@@ -26,6 +28,7 @@ export function buildSources(names?: readonly string[]): TranscriptSource[] {
     cursor: () => cursorSource(),
     claude: () => claudeSource(),
     kiro: () => kiroSource(),
+    copilot: () => copilotSource(),
   };
   return wanted.map((name) => {
     const factory = factories[name];
@@ -118,7 +121,8 @@ export interface IngestFileOverrides {
 
 /**
  * Ingest a single chat file, auto-detecting its format:
- * Cursor JSONL, Claude Code JSONL, Kiro session JSON, or plain text/markdown.
+ * Cursor JSONL, Claude Code JSONL, Copilot CLI events JSONL, Kiro session JSON,
+ * or plain text/markdown.
  * Returns the chat id, or null when the store already has identical content.
  */
 export async function ingestFile(
@@ -168,12 +172,13 @@ function detectAndParse(raw: string): DetectedChat | null {
     // not a single JSON document
   }
 
-  // 2. JSONL: sniff the first parseable line to tell Cursor from Claude Code.
-  //    Cursor lines carry role at the top level; Claude lines carry type + message.
+  // 2. JSONL: sniff the first parseable line to tell Cursor, Copilot and Claude Code apart.
+  //    Cursor lines carry role at the top level; Copilot lines carry a dotted
+  //    event type + data (e.g. "session.start"); Claude lines carry type + message.
   for (const line of raw.split('\n')) {
     const trimmed = line.trim();
     if (!trimmed.startsWith('{')) continue;
-    let obj: { role?: unknown; type?: unknown; message?: unknown };
+    let obj: { role?: unknown; type?: unknown; message?: unknown; data?: unknown };
     try {
       obj = JSON.parse(trimmed);
     } catch {
@@ -182,6 +187,12 @@ function detectAndParse(raw: string): DetectedChat | null {
     if (typeof obj.role === 'string' && obj.message) {
       const parsed = parseCursorTranscript(raw);
       return parsed ? { tool: 'cursor', ...parsed } : null;
+    }
+    if (typeof obj.type === 'string' && obj.type.includes('.') && obj.data) {
+      const parsed = parseCopilotEvents(raw);
+      if (!parsed) return null;
+      const { cwd, ...rest } = parsed;
+      return { tool: 'copilot', ...rest, project: cwd ? basename(cwd) : undefined };
     }
     if (typeof obj.type === 'string') {
       const parsed = parseClaudeTranscript(raw);

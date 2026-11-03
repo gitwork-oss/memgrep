@@ -2,7 +2,7 @@ import type { ChatInput } from '../store.js';
 
 /** A tool whose local chat history can be ingested into memory. */
 export interface TranscriptSource {
-  /** Stable identifier, e.g. "cursor", "claude", "kiro". */
+  /** Stable identifier, e.g. "cursor", "claude", "kiro", "copilot". */
   name: string;
   /** Yield all chats found on disk. Must yield nothing (not throw) when the tool is absent. */
   scan(): AsyncGenerator<ChatInput>;
@@ -33,7 +33,7 @@ export function cleanUserText(text: string): string {
   if (queries.length > 0) return queries.join('\n');
 
   return text
-    .replace(/<(external_links|open_and_recently_viewed_files|system_reminder|system_notification|attached_files|user_info|agent_transcripts|agent_skills|timestamp|command-name|command-message|command-args|local-command-stdout)>[\s\S]*?<\/\1>/g, '')
+    .replace(/<(external_links|open_and_recently_viewed_files|system_reminder|system-reminder|system_notification|attached_files|user_info|agent_transcripts|agent_skills|timestamp|command-name|command-message|command-args|local-command-stdout)>[\s\S]*?<\/\1>/g, '')
     .trim();
 }
 

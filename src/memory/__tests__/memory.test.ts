@@ -1,8 +1,14 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { parseClaudeTranscript, parseCursorTranscript, parseKiroSession } from '../ingest.js';
+import {
+  copilotSource,
+  parseClaudeTranscript,
+  parseCopilotEvents,
+  parseCursorTranscript,
+  parseKiroSession,
+} from '../ingest.js';
 import { MemoryStore } from '../store.js';
 
 describe('parseCursorTranscript', () => {
@@ -70,6 +76,30 @@ describe('parseClaudeTranscript', () => {
     expect(parsed!.content).toContain('Assistant: Deployed via the GitHub Action.');
     expect(parsed!.content).not.toContain('sidechain noise');
   });
+
+  it('strips hyphenated <system-reminder> blocks and titles from the real query', () => {
+    const lines = [
+      JSON.stringify({
+        type: 'user',
+        message: {
+          role: 'user',
+          content: [
+            { type: 'text', text: '<system-reminder>\nThe user email is x@y.z\n</system-reminder>' },
+            { type: 'text', text: 'why is checkout slow?' },
+          ],
+        },
+      }),
+      JSON.stringify({
+        type: 'assistant',
+        message: { role: 'assistant', content: [{ type: 'text', text: 'N+1 query in the cart loader.' }] },
+      }),
+    ].join('\n');
+
+    const parsed = parseClaudeTranscript(lines);
+    expect(parsed!.title).toBe('why is checkout slow?');
+    expect(parsed!.content).not.toContain('system-reminder');
+    expect(parsed!.content).not.toContain('x@y.z');
+  });
 });
 
 describe('ingestFile format detection', () => {
@@ -116,6 +146,27 @@ describe('ingestFile format detection', () => {
     expect(store.getChat(md.id!)?.project).toBe('infra');
 
     expect((await ingestFile(store, mdFile, { project: 'infra' })).id).toBeNull();
+  });
+
+  it('detects Copilot CLI events JSONL', async () => {
+    const { writeFile } = await import('node:fs/promises');
+    const { ingestFile } = await import('../ingest.js');
+
+    const copilotFile = path.join(dir, 'events.jsonl');
+    await writeFile(
+      copilotFile,
+      [
+        { type: 'session.start', data: { context: { cwd: '/home/jane/dev/shop' } } },
+        { type: 'user.message', data: { content: 'why is checkout slow?' } },
+        { type: 'assistant.message', data: { content: 'N+1 query in the cart loader.' } },
+      ]
+        .map((e) => JSON.stringify(e))
+        .join('\n'),
+    );
+    const copilot = await ingestFile(store, copilotFile);
+    expect(copilot.tool).toBe('copilot');
+    expect(copilot.id).not.toBeNull();
+    expect(store.getChat(copilot.id!)?.project).toBe('shop');
   });
 });
 
@@ -248,4 +299,68 @@ describe('MemoryStore', () => {
     const idHits = await store.search('7712', 1, { mode: 'keyword' });
     expect(idHits[0].title).toContain('7712');
   }, 120_000);
+});
+
+describe('parseCopilotEvents', () => {
+  const events = [
+    { type: 'session.start', data: { startTime: '2026-09-29T17:48:42.367Z', context: { cwd: '/home/jane/dev/shop' } } },
+    { type: 'hook.start', data: { hookType: 'userPromptSubmitted' } },
+    { type: 'user.message', data: { content: 'add stripe checkout', transformedContent: '<current_datetime>x</current_datetime>\n\nadd stripe checkout' } },
+    { type: 'assistant.message', data: { content: '', toolRequests: [{ name: 'view' }] } },
+    { type: 'tool.execution_complete', data: { result: { content: 'file contents' } } },
+    { type: 'assistant.message', data: { content: 'sub-agent notes', parentToolCallId: 'toolu_1' } },
+    { type: 'assistant.message', data: { content: 'Added checkout session endpoint.' } },
+  ];
+
+  it('extracts user and assistant text, ignoring tool calls and sub-agents', () => {
+    const parsed = parseCopilotEvents(events.map((e) => JSON.stringify(e)).join('\n'));
+    expect(parsed).not.toBeNull();
+    expect(parsed!.title).toBe('add stripe checkout');
+    expect(parsed!.cwd).toBe('/home/jane/dev/shop');
+    expect(parsed!.createdAt).toBe('2026-09-29T17:48:42.367Z');
+    expect(parsed!.content).toBe('User: add stripe checkout\n\nAssistant: Added checkout session endpoint.');
+    expect(parsed!.content).not.toContain('current_datetime');
+    expect(parsed!.content).not.toContain('sub-agent notes');
+    expect(parsed!.content).not.toContain('file contents');
+  });
+
+  it('returns null for sessions with no usable turns', () => {
+    expect(parseCopilotEvents(JSON.stringify(events[0]))).toBeNull();
+    expect(parseCopilotEvents('')).toBeNull();
+  });
+});
+
+describe('copilotSource', () => {
+  it('reads a quoted workspace name and cwd from the session directory', async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'memgrep-copilot-'));
+    try {
+      const dir = path.join(root, 'session-1');
+      await mkdir(dir);
+      await writeFile(
+        path.join(dir, 'workspace.yaml'),
+        ['name: "Checkout speed"', 'user_named: "true"', "cwd: '/home/jane/dev/shop'", ''].join('\n'),
+      );
+      await writeFile(
+        path.join(dir, 'events.jsonl'),
+        [
+          { type: 'session.start', data: { context: { cwd: '/tmp/ignored' } } },
+          { type: 'user.message', data: { content: 'why is checkout slow?' } },
+          { type: 'assistant.message', data: { content: 'N+1 query in the cart loader.' } },
+        ]
+          .map((event) => JSON.stringify(event))
+          .join('\n'),
+      );
+
+      const chats = [];
+      for await (const chat of copilotSource(root).scan()) chats.push(chat);
+
+      expect(chats).toHaveLength(1);
+      expect(chats[0].title).toBe('Checkout speed');
+      expect(chats[0].project).toBe('shop');
+      expect(chats[0].tool).toBe('copilot');
+      expect(chats[0].content).toContain('User: why is checkout slow?');
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
 });

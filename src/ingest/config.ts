@@ -14,7 +14,7 @@ export type IngestDaemonConfig = {
   version: 1;
   /** Sleep between ingest ticks. */
   intervalMs: number;
-  /** Optional source filter (cursor, claude, kiro). Omit / empty = all. */
+  /** Optional source filter (cursor, claude, kiro, copilot). Omit / empty = all. */
   sources?: SourceName[];
   createdAt: string;
   updatedAt: string;

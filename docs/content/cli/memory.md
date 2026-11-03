@@ -22,7 +22,7 @@ memgrep delete <id>
 Keep memory fresh without running `ingest` by hand:
 
 ```bash
-memgrep ingest install [--interval 1h] [--source cursor,claude,kiro]
+memgrep ingest install [--interval 1h] [--source cursor,claude,kiro,copilot]
 memgrep ingest service
 memgrep ingest daemon [--interval 1h] [--source ...]
 memgrep ingest uninstall
