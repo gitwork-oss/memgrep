@@ -8,7 +8,7 @@ memgrep is a local control plane for Cursor. It started as searchable agent memo
 
 | Pillar | What it does |
 | --- | --- |
-| **Memory** | Ingest Cursor / Claude Code / Kiro chats. Hybrid recall (vector + keyword). `remember` playbooks and decisions. Fully local (SQLite + HNSW + on-device embeddings). |
+| **Memory** | Ingest Cursor / Claude Code / Kiro / Copilot chats. Hybrid recall (vector + keyword). `remember` playbooks and decisions. Fully local (SQLite + HNSW + on-device embeddings). |
 | **Loop** | Per-project coding loops: task in, exit conditions, exit actions (including `github_pr`). Runs until PASS, then optional PR / follow-ups. Editable config in `<cwd>/.memgrep/`; named pointer under `~/.memgrep/loops/<name>/`. |
 | **Telegram** | Allowlisted bot drives a **real** local Cursor agent (`@cursor/sdk`) in a real cwd, with memgrep MCP attached mid-task. |
 | **Jobs** | Cron + remembered playbook + Cursor. Schedule the workflows you already trust. |
@@ -152,7 +152,7 @@ Full walkthroughs: [docs](https://memgrep.gitwork.dev).
 
 ## Agent memory
 
-**In:** `ingest` (Cursor, Claude Code, Kiro) or `remember` (your own note / playbook).  
+**In:** `ingest` (Cursor, Claude Code, Kiro, Copilot) or `remember` (your own note / playbook).  
 **Out:** `recall` (hybrid by default: vector + FTS5/BM25 via RRF), `list`, `show`, `copy`.
 
 ```bash
@@ -172,6 +172,7 @@ Memory lives in `~/.memgrep` (`MEMGREP_HOME` to override). Re-ingest is idempote
 | Cursor | `~/.cursor/projects/*/agent-transcripts/` | Full user + assistant turns |
 | Claude Code | `~/.claude/projects/*/*.jsonl` | Full user + assistant turns |
 | Kiro IDE | Kiro `globalStorage` workspace sessions | User turns and titles (assistant output is opaque) |
+| GitHub Copilot CLI | `~/.copilot/session-state/<id>/events.jsonl` | User and assistant text. Tool calls, hooks, and sub-agent output are skipped. `$COPILOT_HOME` overrides `~/.copilot`. Sessions still in `history-session-state` are skipped until Copilot migrates them. |
 | Antigravity | Not yet | Encrypted protobuf; agents can still *query* via MCP |
 | Anything else | `memgrep remember "<text>"` | Manual notes, decisions, postmortems |
 

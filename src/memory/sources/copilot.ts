@@ -101,7 +101,16 @@ function parseWorkspaceYaml(raw: string): Record<string, string> {
   const out: Record<string, string> = {};
   for (const line of raw.split('\n')) {
     const m = line.match(/^(\w+):\s*(.*)$/);
-    if (m) out[m[1]] = m[2].trim();
+    if (m) out[m[1]] = unquoteYaml(m[2].trim());
   }
   return out;
+}
+
+/** Drop one pair of wrapping single or double quotes from a flat YAML scalar. */
+function unquoteYaml(value: string): string {
+  if (value.length >= 2) {
+    const quote = value[0];
+    if ((quote === '"' || quote === "'") && value.endsWith(quote)) return value.slice(1, -1);
+  }
+  return value;
 }

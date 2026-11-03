@@ -5,7 +5,7 @@ description: Keep local memory fresh with an hourly ingest LaunchAgent.
 
 # Background Ingest
 
-`memgrep ingest` is incremental and safe to re-run. The background daemon runs that sync on an interval so new Cursor / Claude Code / Kiro chats land in memory without a manual step.
+`memgrep ingest` is incremental and safe to re-run. The background daemon runs that sync on an interval so new Cursor / Claude Code / Kiro / Copilot chats land in memory without a manual step.
 
 This is **not** the same as [scheduled jobs](/docs/guides/scheduled-jobs). Jobs fire Cursor playbooks on a cron. The ingest daemon only scans local transcripts into `~/.memgrep`.
 

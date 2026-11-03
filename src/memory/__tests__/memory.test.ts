@@ -1,8 +1,9 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
+  copilotSource,
   parseClaudeTranscript,
   parseCopilotEvents,
   parseCursorTranscript,
@@ -326,5 +327,40 @@ describe('parseCopilotEvents', () => {
   it('returns null for sessions with no usable turns', () => {
     expect(parseCopilotEvents(JSON.stringify(events[0]))).toBeNull();
     expect(parseCopilotEvents('')).toBeNull();
+  });
+});
+
+describe('copilotSource', () => {
+  it('reads a quoted workspace name and cwd from the session directory', async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'memgrep-copilot-'));
+    try {
+      const dir = path.join(root, 'session-1');
+      await mkdir(dir);
+      await writeFile(
+        path.join(dir, 'workspace.yaml'),
+        ['name: "Checkout speed"', 'user_named: "true"', "cwd: '/home/jane/dev/shop'", ''].join('\n'),
+      );
+      await writeFile(
+        path.join(dir, 'events.jsonl'),
+        [
+          { type: 'session.start', data: { context: { cwd: '/tmp/ignored' } } },
+          { type: 'user.message', data: { content: 'why is checkout slow?' } },
+          { type: 'assistant.message', data: { content: 'N+1 query in the cart loader.' } },
+        ]
+          .map((event) => JSON.stringify(event))
+          .join('\n'),
+      );
+
+      const chats = [];
+      for await (const chat of copilotSource(root).scan()) chats.push(chat);
+
+      expect(chats).toHaveLength(1);
+      expect(chats[0].title).toBe('Checkout speed');
+      expect(chats[0].project).toBe('shop');
+      expect(chats[0].tool).toBe('copilot');
+      expect(chats[0].content).toContain('User: why is checkout slow?');
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });
