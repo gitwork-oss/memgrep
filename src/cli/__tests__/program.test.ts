@@ -38,7 +38,7 @@ describe('createProgram', () => {
     expect(docs).toBeDefined();
     expect(docs!.aliases()).toContain('doc');
     const sub = docs!.commands.map((c) => c.name()).sort();
-    expect(sub).toEqual(['edit', 'fill', 'list', 'setup', 'status']);
+    expect(sub).toEqual(['edit', 'fill', 'list', 'pdf', 'setup', 'status']);
   });
 
   it('registers edge subcommands', () => {

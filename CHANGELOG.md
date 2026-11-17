@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.3] - 2026-11-17
+
+### Added
+
+- **GitHub Copilot CLI ingest** - `copilot` source reads `~/.copilot/session-state/<id>/events.jsonl` (or `$COPILOT_HOME`); user and assistant text only; `workspace.yaml` for cwd and user-assigned session names.
+
+### Changed
+
+- **`cleanUserText`** - strip hyphenated `<system-reminder>` blocks (Claude Code) so injected context does not leak into titles or ingested dialogue.
+- **Copilot `workspace.yaml`** - drop wrapping single or double quotes from flat scalar values.
+
+### Fixed
+
+- **`cursor_run` artifacts** (since npm 1.7.0) - `register_artifact`, workspace `GET /workspace/file`, infer output PDFs from agent text when registration was skipped, and match bare `cv-*.pdf` filenames under `output/`.
+
 ## [1.6.7] - 2026-08-03
 
 ### Added
@@ -236,7 +251,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SQLite + HNSW index with self-healing (rebuilds the vector cache from the database after crashes or interrupted ingests).
 - Idempotent ingestion by content hash; manual notes via `remember` land in the same searchable memory.
 
-[Unreleased]: https://github.com/darula-hpp/memgrep/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/gitwork-oss/memgrep/compare/v1.7.3...HEAD
+[1.7.3]: https://github.com/gitwork-oss/memgrep/compare/v1.7.0...v1.7.3
 [1.6.0]: https://github.com/darula-hpp/memgrep/compare/v1.5.5...v1.6.0
 [1.5.5]: https://github.com/darula-hpp/memgrep/compare/v1.5.4...v1.5.5
 [1.5.4]: https://github.com/darula-hpp/memgrep/compare/v1.5.3...v1.5.4
